@@ -3,8 +3,38 @@ import numpy as np
 from utils import trapezoidal_function
 from line_env import LineEnv
 import utils
-from pid_controller import PID_Info
+from pid_controller import PID_Info,PID_Controller
 from matplotlib import  pyplot as plt
+
+def ClassicPID():
+    pidinfo = PID_Info("Classic PID",100)
+    x = list(np.arange(args.start_time, args.end_time, args.dt))
+    y = utils.horizontal_line(x,100)
+    pidinfo.set_start_time(x[0])
+    p1 = []
+    now1 = 0
+    p,i,d = 6,1.1,4
+    pid1 = PID_Controller(p,i,d)
+    for i,sim_time in enumerate(x):
+        error1 = y[i] - now1
+        # print(error1)
+        pidinfo.check_stable(error1,now1,sim_time,i) # 更新相关信息
+        now1 += pid1.update_up(0, 0, 0, error1) * args.dt
+        p1.append(now1)
+    pidinfo.showPIDControlInfo()
+
+    # plt.plot(x, y, 'r-', linewidth=0.5)
+    plt.plot(x, p1, 'b-', linewidth=0.5)
+
+    # plt.scatter(x[pidinfo.stable_idx], p1[pidinfo.stable_idx], color=(0.7, 0., 0.6))
+    # plt.scatter(pidinfo.top_point.x, pidinfo.top_point.y,color=(0.,0.5,0.))
+
+    plt.xlabel('time')
+    plt.ylabel('position')
+    # plt.legend(["target_pos", "real_pos"], loc='lower right')
+
+    # plt.show()
+
 class run_base(object):
     def __init__(self):
         self.var_min = 0.01
@@ -67,6 +97,11 @@ class run_base(object):
                 file.write("{} {}".format(str(data[0]), str(data[1])))
                 file.write("\r\n")
 
+    def show_rewards(self,steps,rewards):
+        plt.plot(steps, rewards, 'b-', linewidth=1)
+        plt.xlabel('step')
+        plt.ylabel('reward')
+        plt.show()
 
 class run_pid_parameter(run_base):
     def __init__(self):
@@ -123,13 +158,14 @@ class run_pid_parameter(run_base):
                 utils.show_resutlt(x, target, real)
 
         self.save_result_txt(xs=steps,ys=epRewards,yaxis="epRewards")
+        self.show_rewards(steps,epRewards)
 
     def test(self,times):
         self.agent.load()
         state = self.env.reset()  # 获取环境初始状态
         ep_reward = 0  # 累计奖励
 
-        pidinfo = PID_Info("Classic PID", 100)
+        pidinfo = PID_Info("DRL PID", 100)
         pidinfo.set_start_time(0.0)
         # 绘图需要的一些数据
         x, target, real = [], [], []
@@ -156,14 +192,19 @@ class run_pid_parameter(run_base):
                 break
 
         pidinfo.showPIDControlInfo()
-        # plt.scatter(pidinfo.stable_point.x, pidinfo.stable_point.y, color=(0.7, 0., 0.6))
-        plt.scatter(x[pidinfo.stable_idx], real[pidinfo.stable_idx], color=(0.7, 0., 0.6))
-        plt.scatter(pidinfo.top_point.x, pidinfo.top_point.y, color=(0., 0.5, 0.))
-        utils.show_resutlt(x, target, real)
 
+        plt.plot(x, target, 'r-', linewidth=0.5)
+        plt.plot(x, real, 'g-', linewidth=0.5)
+        ClassicPID()
+        # plt.scatter(x[pidinfo.stable_idx], real[pidinfo.stable_idx], color=(0.7, 0., 0.6))
+        # plt.scatter(pidinfo.top_point.x, pidinfo.top_point.y, color=(0., 0.5, 0.))
 
+        # utils.show_resutlt(x, target, real)
 
-
+        plt.xlabel('time')
+        plt.ylabel('position')
+        plt.legend(["Step Func", "DRL_PID","PID"], loc='lower right')
+        plt.show()
 
 def main():
     # Get Time [0,args.dt,2 * args.dt,..., ]
@@ -172,7 +213,7 @@ def main():
     if args.run_type == "train":
         if args.choose_model == "dynamic_pid":
             runner.train(times)
-    else:
+    else: # --run_type test
         if args.choose_model == "dynamic_pid":
             runner.test(times)
 

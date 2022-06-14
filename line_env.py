@@ -32,10 +32,12 @@ class LineEnv(gym.Env):
 
         # 奖励函数的一些常量信息
         self.k = 2
-        self.c = -20
+        self.c = -200
 
         #TODO 待修改  一些阈值常量
-        self.error_limit = 200
+        self.error_limit = 150
+        self.quick_error_limit = 50
+
         self.speed_limie = 100
         # PID控制器
         self.pid = PID_Controller(kp=args.kp, ki=args.ki, kd=args.kd)
@@ -110,10 +112,10 @@ class LineEnv(gym.Env):
         """
         if math.fabs(error) >= self.error_limit:
             return self.c
-        elif error >= 0:  # 当前在目标值下方
-            return math.exp(self.k - error)
-        else:  # 当前在目标值上方
-            return math.exp(self.k + error)
+        elif math.fabs(error) >= self.quick_error_limit:
+            return math.fabs(self.last_error) - math.fabs(error)
+        else:
+            return math.exp(self.k - math.fabs(error))
 
     def _isDone(self):
         """

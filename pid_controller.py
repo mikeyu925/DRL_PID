@@ -111,4 +111,4 @@ class PID_Info():
         print(self.name + "相关信息如下：")
         print("     绝对误差积分:" + str(self.AEI))
         print("     调节时间:" + str(self.AT))
-        print("     超调量:" + str(-self.PO * 100))
+        print("     超调量:" + str(-self.PO / self.height * 100))
