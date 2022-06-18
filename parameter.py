@@ -28,7 +28,7 @@ parser.add_argument('--render', default=False, type=bool)  # show UI or not
 parser.add_argument('--log_interval', default=50, type=int)
 parser.add_argument('--load', default=False, type=bool)  # load model
 parser.add_argument('--render_interval', default=100, type=int)  # after render_interval, the env.render() will work
-parser.add_argument('--exploration_noise', default=5, type=float)
+parser.add_argument('--exploration_noise', default=2, type=float)
 parser.add_argument('--max_episode', default=100000, type=int)  # num of games
 parser.add_argument('--print_log', default=5, type=int)
 parser.add_argument('--update_iteration', default=200, type=int)

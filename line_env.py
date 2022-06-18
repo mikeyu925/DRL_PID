@@ -31,17 +31,18 @@ class LineEnv(gym.Env):
         self.state_dim = len(self.state)
 
         # 奖励函数的一些常量信息
-        self.k = 2
-        self.c = -200
+        self.k = 1
+        self.c = -300
 
         #TODO 待修改  一些阈值常量
-        self.error_limit = 150
+        self.error_limit = 130
         self.quick_error_limit = 50
 
         self.speed_limie = 100
         # PID控制器
         self.pid = PID_Controller(kp=args.kp, ki=args.ki, kd=args.kd)
         self.control_info = PID_Info("Trick Line",100)  # 一些控制信息
+        self.control_info.set_start_time(0.0)
 
         self.height = 100
         self.line_y = step_function(list(self.times))
@@ -67,6 +68,9 @@ class LineEnv(gym.Env):
 
         # PID控制器  还需要重置，因为要初始化pid的本身的误差信息
         self.pid = PID_Controller(kp=args.kp, ki=args.ki, kd=args.kd)
+        self.control_info = PID_Info("Trick Line", 100)  # 一些控制信息
+        self.control_info.set_start_time(0.0)
+
         return self.state
 
     def step(self,action):
@@ -84,8 +88,8 @@ class LineEnv(gym.Env):
         # 如果已经出于稳态，则不再进行补偿
         if error <= self.height * 0.02:
             _out = 0
-        out_speed = self.pid.update_up(_kp,_ki,_kd,error) + _out
-
+        # out_speed = self.pid.update_up(_kp,_ki,_kd,error) + _out
+        out_speed = self.pid.update_up(_kp, _ki, _kd, error) + _out
         # 更新状态
         self.last_last_error = self.last_error
         self.last_error = self.now_error
@@ -97,12 +101,12 @@ class LineEnv(gym.Env):
         # 获得即时奖励
         reward = self._get_immediate_reward(error)
         # 是否到达终止状态
-        done = self._isDone()
+        done,reward_ = self._isDone()
 
         self.cnt += 1  # TODO 应该加在Done后面
         self.state = np.array([self.last_last_error,self.last_error,self.now_error,self.now_pos,self.last_speed,self.now_speed])
 
-        return self.state, reward, done
+        return self.state, reward + reward_, done
 
     def _get_immediate_reward(self,error):
         """
@@ -123,10 +127,15 @@ class LineEnv(gym.Env):
         :return:
         """
         if math.fabs(self.now_error) >= self.error_limit:  # 提前结束
-            return True
+            return True , 0
         if self.cnt == len(self.times) - 1:  # 到达终止状态
-            return True
-        return False
+            r = math.exp(2-self.control_info.AEI)
+            if self.control_info.reach_stable == True:
+                r += 10 / self.control_info.AT
+            if self.control_info.reach_top == True:
+                r += math.exp(self.control_info.PO / self.control_info.height * 100)
+            return True , r
+        return False , 0
 
 
 if __name__ == '__main__':

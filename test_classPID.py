@@ -75,13 +75,14 @@ def horizontal_line_response():
     pidinfo.set_start_time(x[0])
     p1 = []
     now1 = 0
-    p,i,d = 6,0.7,4
+    p,i,d = 10,1,6
     pid1 = PID_Controller(p,i,d)
     for i,sim_time in enumerate(x):
         error1 = y[i] - now1
-        print(error1)
+        # print(error1)
         pidinfo.check_stable(error1,now1,sim_time,i) # 更新相关信息
-        now1 += pid1.update_up(0, 0, 0, error1) * args.dt
+        # now1 += pid1.update_up(0, 0, 0, error1) * args.dt
+        now1 += pid1.update(0, 0, 0, error1) * args.dt
         p1.append(now1)
     pidinfo.showPIDControlInfo()
 

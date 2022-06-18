@@ -20,7 +20,7 @@ class PID_Controller(object):
         self.CumulativeError = 0.0
         self.LastError = None
         self.integralThreshold = 10
-        self.CumulativeThreshold = 50
+        self.CumulativeThreshold = 200
 
     def update(self, _kp,_ki,_kd,error):
         """
@@ -76,9 +76,9 @@ class PID_Info():
         self.AEI = 0 # 绝对误差积分
         self.dt = args.dt
 
-        self.AT = 0  # 调节时间
+        self.AT = float('inf')   # 调节时间
+        self.reach_stable = False  # 是否到达稳态标志位
         self.start_time = -1      # 开始判断是否达到稳态的起始时间
-        self.reach_stable = False # 是否到达稳态标志位
         self.cnt_threadhold = 80  # 当 cnt >= cnt_threadhold 时说明到达稳态
         self.cnt =  0
         self.error_threadhold = 0.02 * self.height
@@ -86,6 +86,7 @@ class PID_Info():
         self.stable_idx = -1
 
         self.PO = 0  # 超调量
+        self.reach_top = False
 
     def set_start_time(self,t):
         self.start_time = t
@@ -94,6 +95,7 @@ class PID_Info():
         self.AEI += math.fabs(error) * self.dt
 
         if error < self.PO:
+            self.reach_top = True
             self.PO = error
             self.top_point = Point(t, now)
 
