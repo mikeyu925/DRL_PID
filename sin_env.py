@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+"""
+@Modify Time      @Author    @Version    @Desciption
+------------      -------    --------    -----------
+2022/6/18 16:24   xxx      1.0         None
+"""
 from parameter import args
 from utils import trapezoidal_function
 import numpy as np
@@ -6,11 +13,12 @@ import matplotlib.pyplot as plt
 from pid_controller import PID_Controller,PID_Info
 from utils import sin_curve,step_function,horizontal_line
 import math
+import random
 
 
-class LineEnv(gym.Env):
+class SinEnv(gym.Env):
     def __init__(self):
-        super(LineEnv, self).__init__()
+        super(SinEnv, self).__init__()
         np.random.seed(args.seed)
         # 环境的一些状态信息
         self.last_last_error = 0.0
@@ -44,20 +52,19 @@ class LineEnv(gym.Env):
         self.control_info.set_start_time(0.0)
 
         self.height = 100
-        self.line_y = step_function(list(self.times))
-        self.horizontal_line = horizontal_line(self.times,self.height)
 
+        self.sin_line = sin_curve(self.times)
     def reset(self):
         # 环境的一些状态信息 TODO 是全部初始化为0还是？
-        # self.now_pos = random() * 10  # 当前随机一个位置
-        # self.now_error = self.now_pos - sin_curve(0)  # 当前误差
-        # self.last_error = min(self.now_error * 1.3,self.error_limit)  # 上次误差
-        # self.last_last_error = min(self.now_error * 1.6,self.error_limit) # 上上次误差
+        self.now_pos = random.random() * 50  # 当前随机一个位置
+        self.now_error = self.now_pos - sin_curve(0)  # 当前误差
+        self.last_error = min(self.now_error * 1.3,self.error_limit)  # 上次误差
+        self.last_last_error = min(self.now_error * 1.6,self.error_limit) # 上上次误差
 
-        self.now_pos = 0  # 当前随机一个位置
-        self.now_error = 0  # 当前误差
-        self.last_error = 0  # 上次误差
-        self.last_last_error = 0 # 上上次误差
+        # self.now_pos = 0  # 当前随机一个位置
+        # self.now_error = 0  # 当前误差
+        # self.last_error = 0  # 上次误差
+        # self.last_last_error = 0 # 上上次误差
 
         self.last_speed = 0.0
         self.now_speed  = 0.0
@@ -83,11 +90,11 @@ class LineEnv(gym.Env):
         # 计算误差
         # error = sin_curve(self.times[self.cnt]) - now_pos
 
-        error = self.horizontal_line[self.cnt] - now_pos
+        error = self.sin_line[self.cnt] - now_pos
         # 如果已经出于稳态，则不再进行补偿
-        if error <= self.height * 0.08:
+        if error <= self.height * 0.02:
             _out = 0
-
+        # out_speed = self.pid.update_up(_kp,_ki,_kd,error) + _out
         out_speed = self.pid.update_up(_kp, _ki, _kd, error) + _out
         # 更新状态
         self.last_last_error = self.last_error
@@ -102,7 +109,7 @@ class LineEnv(gym.Env):
         # 是否到达终止状态
         done,reward_ = self._isDone()
 
-        self.cnt += 1
+        self.cnt += 1  # TODO 应该加在Done后面
         self.state = np.array([self.last_last_error,self.last_error,self.now_error,self.now_pos,self.last_speed,self.now_speed])
 
         return self.state, reward + reward_, done
@@ -135,12 +142,3 @@ class LineEnv(gym.Env):
                 r += math.exp(self.control_info.PO / self.control_info.height * 100)
             return True , r
         return False , 0
-
-
-if __name__ == '__main__':
-    x_limit = 2 * np.pi
-    x = np.arange(args.start_time, args.end_time, args.dt)
-    print(len(x))
-    y = sin_curve(x)
-    plt.plot(x, y)
-    plt.show()

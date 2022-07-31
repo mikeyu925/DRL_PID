@@ -50,6 +50,19 @@ def  horizontal_line(time,height):
         y = [height for _ in range(n)]
         return y
 
+def square_line(time,height):
+    x1 = (int)(len(time) / 4)
+    x2 = (int)(len(time) / 2)
+    x3 = (int)(len(time) * 3 / 4)
+    y = [height for i in range(x1)]
+    for i in range(x1,x2):
+        y.append(0)
+    for i in range(x2,x3):
+        y.append(height)
+    for i in range(x3,len(time)):
+        y.append(0)
+    return y
+
 def show_resutlt(x,target,real):
     plt.plot(x, target, 'r-',linewidth=0.5)
     plt.plot(x,real, 'b-',linewidth=0.5)
@@ -67,9 +80,8 @@ def action_limit(action):
     return action
 
 
+
 if __name__ == '__main__':
     x = np.arange(args.start_time, args.end_time, args.dt)[:args.max_ep_steps]
-    print(int(len(x)/5))
-    y1 = x * 2
-    y2 = x ** 2
-    show_resutlt(x,y1,y2)
+    print(len(x))
+    square_line(x,100)

@@ -1,16 +1,23 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+"""
+@Modify Time      @Author    @Version    @Desciption
+------------      -------    --------    -----------
+2022/6/18 18:35   xxx      1.0         None
+"""
 from parameter import args
 from utils import trapezoidal_function
 import numpy as np
 import gym
 import matplotlib.pyplot as plt
 from pid_controller import PID_Controller,PID_Info
-from utils import sin_curve,step_function,horizontal_line
+from utils import step_function,square_line
 import math
 
 
-class LineEnv(gym.Env):
+class SquareEnv(gym.Env):
     def __init__(self):
-        super(LineEnv, self).__init__()
+        super(SquareEnv, self).__init__()
         np.random.seed(args.seed)
         # 环境的一些状态信息
         self.last_last_error = 0.0
@@ -45,7 +52,7 @@ class LineEnv(gym.Env):
 
         self.height = 100
         self.line_y = step_function(list(self.times))
-        self.horizontal_line = horizontal_line(self.times,self.height)
+        self.square_line = square_line(self.times,self.height)
 
     def reset(self):
         # 环境的一些状态信息 TODO 是全部初始化为0还是？
@@ -83,7 +90,7 @@ class LineEnv(gym.Env):
         # 计算误差
         # error = sin_curve(self.times[self.cnt]) - now_pos
 
-        error = self.horizontal_line[self.cnt] - now_pos
+        error = self.square_line[self.cnt] - now_pos
         # 如果已经出于稳态，则不再进行补偿
         if error <= self.height * 0.08:
             _out = 0
@@ -135,12 +142,3 @@ class LineEnv(gym.Env):
                 r += math.exp(self.control_info.PO / self.control_info.height * 100)
             return True , r
         return False , 0
-
-
-if __name__ == '__main__':
-    x_limit = 2 * np.pi
-    x = np.arange(args.start_time, args.end_time, args.dt)
-    print(len(x))
-    y = sin_curve(x)
-    plt.plot(x, y)
-    plt.show()

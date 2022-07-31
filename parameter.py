@@ -28,7 +28,7 @@ parser.add_argument('--render', default=False, type=bool)  # show UI or not
 parser.add_argument('--log_interval', default=50, type=int)
 parser.add_argument('--load', default=False, type=bool)  # load model
 parser.add_argument('--render_interval', default=100, type=int)  # after render_interval, the env.render() will work
-parser.add_argument('--exploration_noise', default=2, type=float)
+parser.add_argument('--exploration_noise', default=5, type=float)
 parser.add_argument('--max_episode', default=100000, type=int)  # num of games
 parser.add_argument('--print_log', default=5, type=int)
 parser.add_argument('--update_iteration', default=200, type=int)
@@ -60,5 +60,6 @@ parser.add_argument("--action_dim", type=int, default=4, help="the action dim of
 parser.add_argument("--ep_reward_max", type=int, default=1000000, help="the ")
 parser.add_argument("--run_type", type=str, default="train", help="choose from ['train', 'test']")
 parser.add_argument("--choose_model", type=str, default='dynamic_pid', help="one of ['dynamic_pid',  'class_pid']")
+parser.add_argument("--trick_type", type=str, default='response')
 
 args = parser.parse_args()
